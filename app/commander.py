@@ -2,7 +2,7 @@ from models import *
 from twilio.rest import TwilioRestClient
 from time import gmtime, strftime
 import urllib2
-import simplejson
+#import simplejson
 import re
 from logger import log
 from lxml import html as lh
@@ -22,9 +22,9 @@ def clean(s):
 class Commander(Thread):
   def __init__(self, fromNumber, cmd):
     self.num = fromNumber
-    print "commander number", fromNumber
+    #print "commander number", fromNumber
     self.user = db.Users.find_one({"number":fromNumber})
-    print "commander user", self.user
+    #print "commander user", self.user
     self.moreText = '(txt "more" to cont)'
     self.cmd = cmd
     Thread.__init__(self)
@@ -55,22 +55,22 @@ class Commander(Thread):
       # grab the first returned result
       return self.customCommandHelper(list(customCmds)[0]['_id'], cmd)
     
+  
   def customCommandHelper(self, cmdId, userCmd):
     cmd = db.Commands.find_one({'_id':cmdId})
     # parse out userCmd according to switch operators
     if len(cmd.switches) > 0:
       # there are switches, parse them
-      #switchLocs = [s for s in cmd.switches]
       
       switchLocs = []
       switches = []
       #print "switches", cmd.switches
       for s in cmd.switches:
-        if s['switch'] != '':
+        if s['switch']:
           if userCmd.find(s['switch']+'.') >= 0:
-            switchLocs.append({'s':s['switch']+'.', 'loc':userCmd.find(s['switch']+'.')})
+            switchLocs.append({'s':s['switch'], 'loc':userCmd.find(s['switch']+'.'), 'default': s['default']})
           elif  s['default'] != '':
-            switches.append({'s':s['switch']+'.', 'data':s['default']})
+            switches.append({'s':s['switch']+'='+s['default'], 'data':s['default']})
           else:
             return {'error':'Error:missing '+s['switch']+' switch. ex:'+cmd.example}
         
@@ -79,18 +79,26 @@ class Commander(Thread):
       for i in xrange(len(switchLocs)-1):
         s1 = switchLocs[i]
         s2 = switchLocs[i+1]
-        data = clean(userCmd[s1['loc']+2:s2['loc']]).replace(' ', '%20')
-        switches.append({'s':s1['s'], 'data':data})
+        data = clean(userCmd[s1['loc']+len(s1['s'])+1:s2['loc']]).replace(' ', '%20')
+        if s['default'] != '':
+          switches.append({'s':s1['s']+'='+s1['default'], 'data':data})
+        else:
+        	switches.append({'s':s1['s'], 'data':data})
       # append final one
       if len(switchLocs) > 0:
-        data = clean(userCmd[switchLocs[-1]['loc']+2:]).replace(' ', '%20')
-        switches.append({'s':switchLocs[-1]['s'],'data':data})
+        data = clean(userCmd[switchLocs[-1]['loc']+len(switchLocs[-1]['s'])+1:]).replace(' ', '%20')
+        if s['default'] != '':
+        	switches.append({'s':switchLocs[-1]['s']+'='+switchLocs[-1]['default'],'data':data})
+        else:
+        	switches.append({'s':switchLocs[-1]['s'],'data':data})
 
       url = cmd.url
+      #print switches
       #put together url with switches
       for s in switches:
-        print s['data']
-        newUrl = url.replace('{'+s['s'][:-1]+'}', s['data'])
+        #print '{'+s['s']+'}', s['data']
+
+        newUrl = url.replace('{'+s['s']+'}', s['data'])
         if newUrl == url:
           # something went wrong. a command didnt get replaced
           return {'error':"Error:couldn't find switch "+s['s']+""}
@@ -99,20 +107,17 @@ class Commander(Thread):
     else:
       url = cmd.url
     try:
-      print url
+      #print url
       request = urllib2.Request(url)
       request.add_header("User-Agent", 'Texatron/0.1')
       raw = urllib2.urlopen(request)
-      #soup = BeautifulSoup(raw)
-      html = lh.fromstring(content)
-			# parse soup according to includes
       msg = ''
       count = 1
-      text = self.findHtmlElements(html, cmd.selector)
+      text = self.findHtmlElements(lh.parse(raw), cmd.selectors)
       
       for t in text:
-        msg = msg + ' '+str(count)+'.'+ str(t.encode())
-        count = count + 1
+        msg = msg + ' '+ str(t.encode('UTF-8', errors='replace'))
+      #  count = count + 1
       return {'success':msg}
     except urllib2.HTTPError, e:
       return {"error": "HTTP error: %d" % e.code}
@@ -120,7 +125,7 @@ class Commander(Thread):
       return {"error": "Network error: %s" % e.reason.args[1]} 
 
   def findHtmlElements(self, eTree, css):
-    sel = lxml.CSSSelector(css)
+    sel = CSSSelector(css)
     
     foundText = [e.text_content() for e in sel(eTree)]
     #foundText.join('')

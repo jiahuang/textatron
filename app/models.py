@@ -13,7 +13,7 @@ class Users(Document):
       'time' : datetime.datetime,
       'message' : unicode,
     }],
-    'cmds' : [pymongo.objectid.ObjectId]
+    'cmds' : [bson.objectid.ObjectId]
   }
   # ensuring unique numbers
   indexes = [{ 
@@ -42,7 +42,7 @@ class Cache(Document):
 class Commands(Document): #user generated commands
   use_schemaless = True
   __collection__ = 'commands'
-  __database__ = DATABASE_GLAD
+  __database__ = DATABASE_TEXT
   structure = {
     'cmd' : unicode, 
     'url': unicode,
@@ -58,7 +58,6 @@ class Commands(Document): #user generated commands
   }]
   default_values = {
     'switches': [],
-    'selectors':[],
     'dateUpdated':datetime.datetime.utcnow()
   }
   use_dot_notation = True 

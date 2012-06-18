@@ -19,7 +19,7 @@ import datetime, sys, json, time, uuid, subprocess
 from models import *
 import twilio.twiml
 from logger import log
-import simplejson
+#import simplejson
 from urlparse import urlparse
 from commander import *
 
@@ -45,14 +45,14 @@ def json_res(obj):
 ########################################################################
 @app.route('/command', methods=["GET"])
 def command():
-	# given a web page url, gets all the commands that other people 
-	# have made off of it
-	return
+  # given a web page url, gets all the commands that other people 
+  # have made off of it
+  return
 
 @app.route('/command/new', methods=["POST"])
 def newCommand():
-	cmd = json.loads(request.form.get('cmd', ''))
-	urlparts = urlparse(inputCmd['url'])
+  cmd = json.loads(request.form.get('cmd', ''))
+  urlparts = urlparse(inputCmd['url'])
   if not urlparts.scheme:
     cmd['url'] = 'http://'+cmd['url']
   newCmd = db.Commands()
@@ -60,13 +60,13 @@ def newCommand():
   newCmd.url = cmd['url']
   # parsing for switches
   #switches = re.findall(r"(?<={)[^{|}]+(?=})", newCmd['url'])
-  parsedSwitches = [{'switch':switch.split('=')[0], 'default':switch.split('=')[1]} for switch in re.findall(r"(?<={)[^{|}]+(?=})", cmd['url'])]
+  parsedSwitches = [{'switch':switch.split('=')[0], 'default':switch.split('=')[1] if len(switch.split('=')) > 1 else ''} for switch in re.findall(r"(?<={)[^{|}]+(?=})", cmd['url'])]
   # parsing css selectors
   # parsedCSS = [clean(selector) for selector in cmd['css'].split(',') if selector != '']
   newCmd.switches = parsedSwitches
   newCmd.selectors = cmd['css']
   newCmd.save()
-	return json_res({'success': 'Sweet, your command has been added. Try texting '+cmd+' to '+TEXATRON_NUMBER})
+  return json_res({'success': 'Sweet, your command has been added. Try texting '+cmd+' to '+TEXATRON_NUMBER})
 
 @app.route('/requests', methods=["POST"])
 def requests():

@@ -1,0 +1,28 @@
+.mouse_visited {
+  background-color: #bcd5eb;
+  outline: 1px solid #5166bb;
+}
+
+.mouse_clicked {
+  background-color: #BCEBC7;
+  outline: 1px solid #51BB6B;
+}
+
+#Panel {
+  background-color: white;
+  width:40%;
+  height:40px;
+  float:left;
+  position:fixed;
+  left:20px;
+  top:20px;
+  z-index:10000;
+}
+
+.hidden {
+	display: none;
+}
+
+.panelText {
+	width:70%;
+}

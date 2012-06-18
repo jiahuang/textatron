@@ -1,0 +1,8 @@
+<script type="text/javascript">
+    
+    chrome.browserAction.onClicked.addListener(function(tab) {
+        alert("test");
+        chrome.tabs.executeScript(tab.id, { file: 'textatron_client.js' });
+    });
+
+</script>

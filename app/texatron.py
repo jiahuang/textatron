@@ -21,6 +21,7 @@ import twilio.twiml
 from logger import log
 import simplejson
 from urlparse import urlparse
+from commander import *
 
 ########################################################################
 # Configuration
@@ -34,7 +35,10 @@ app.config.from_object(__name__)
 ########################################################################
 # Helper functions
 ########################################################################
-
+def json_res(obj):
+  # convert datetimes to miliseconds since epoch
+  dthandler = lambda obj: time.mktime(obj.timetuple())*1000 if isinstance(obj, datetime.datetime) else None
+  return Response(json.dumps(obj, default=dthandler), mimetype='application/json')
 
 ########################################################################
 # Routes
@@ -47,7 +51,21 @@ def command():
 
 @app.route('/command/new', methods=["POST"])
 def newCommand():
-	request.form.get('')
+	cmd = json.loads(request.form.get('cmd', ''))
+	urlparts = urlparse(inputCmd['url'])
+  if not urlparts.scheme:
+    cmd['url'] = 'http://'+cmd['url']
+  newCmd = db.Commands()
+  newCmd.cmd = cmd['cmd'].lower()
+  newCmd.url = cmd['url']
+  # parsing for switches
+  #switches = re.findall(r"(?<={)[^{|}]+(?=})", newCmd['url'])
+  parsedSwitches = [{'switch':switch.split('=')[0], 'default':switch.split('=')[1]} for switch in re.findall(r"(?<={)[^{|}]+(?=})", cmd['url'])]
+  # parsing css selectors
+  # parsedCSS = [clean(selector) for selector in cmd['css'].split(',') if selector != '']
+  newCmd.switches = parsedSwitches
+  newCmd.selectors = cmd['css']
+  newCmd.save()
 	return json_res({'success': 'Sweet, your command has been added. Try texting '+cmd+' to '+TEXATRON_NUMBER})
 
 @app.route('/requests', methods=["POST"])
@@ -56,13 +74,14 @@ def requests():
   # this request should only be accessed through twilio
   fromNumber = request.form.get('From', None)
   msg = clean(request.form.get('Body', None).lower())
+
   log('access', 'REQUEST: '+fromNumber+' '+msg)
 
   currDate = datetime.datetime.utcnow()
-  user = db.users.find_one({'number': fromNumber})
+  #user = db.users.find_one({'number': fromNumber})
   req = {'time':currDate, 'message':msg}
     
-  db.users.update({'number':fromNumber}, {'$push':{'requests':req}})
+  db.users.update({'number':fromNumber}, {'$push':{'requests':req}}, true) # upsert
   log('access', "REACHED: new request "+msg+" from "+fromNumber)
   Commander(fromNumber, msg).start()
 
@@ -73,10 +92,7 @@ def requests():
 ########################################################################
 @app.route('/', methods=['GET'])
 def main():
-  if "logged_in" in session and session['logged_in']:
-    return render_template('settings.html')
-  else:
-    return render_template('main.html')
+  return render_template('main.html')
 
 ########################################################################
 # Entry

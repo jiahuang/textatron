@@ -46,3 +46,11 @@ def main(name):
 
 if __name__ == '__main__':
   main(*sys.argv)
+
+'''
+curl test
+
+curl -d 'cmd=test&url=http://en.wikipedia.org/wiki/Bird&css=H1#firstHeading.firstHeading' http://127.0.0.1:9000/command/new
+
+curl -d 'From=19193971139&Body=test' http://127.0.0.1:9000/requests
+'''

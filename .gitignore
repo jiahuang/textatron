@@ -1,5 +1,6 @@
 *.py[co]
 globalConfigs.py
+chrome.pem
 
 # Packages
 *.egg

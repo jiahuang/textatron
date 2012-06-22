@@ -51,29 +51,30 @@ def command():
 
 @app.route('/command/new', methods=["POST"])
 def newCommand():
-  cmd = json.loads(request.form.get('cmd', ''))
-  urlparts = urlparse(inputCmd['url'])
+  #cmd = json.loads(request.form.get('cmd', ''))
+  url = request.form.get('url', '');
+  urlparts = urlparse(url)
   if not urlparts.scheme:
-    cmd['url'] = 'http://'+cmd['url']
+    url = 'http://'+url
   newCmd = db.Commands()
-  newCmd.cmd = cmd['cmd'].lower()
-  newCmd.url = cmd['url']
+  newCmd.cmd = request.form.get('cmd', '').lower()
+  newCmd.url = url
   # parsing for switches
   #switches = re.findall(r"(?<={)[^{|}]+(?=})", newCmd['url'])
-  parsedSwitches = [{'switch':switch.split('=')[0], 'default':switch.split('=')[1] if len(switch.split('=')) > 1 else ''} for switch in re.findall(r"(?<={)[^{|}]+(?=})", cmd['url'])]
+  parsedSwitches = [{'switch':switch.split('=')[0], 'default':switch.split('=')[1] if len(switch.split('=')) > 1 else ''} for switch in re.findall(r"(?<={)[^{|}]+(?=})", url)]
   # parsing css selectors
   # parsedCSS = [clean(selector) for selector in cmd['css'].split(',') if selector != '']
   newCmd.switches = parsedSwitches
-  newCmd.selectors = cmd['css']
+  newCmd.selectors = request.form.get('css', '')
   newCmd.save()
-  return json_res({'success': 'Sweet, your command has been added. Try texting '+cmd+' to '+TEXATRON_NUMBER})
+  return json_res({'success': 'Sweet, your command has been added. Try texting '+newCmd.cmd+' to '+TEXTATRON_NUM})
 
 @app.route('/requests', methods=["POST"])
 def requests():
   print "REACHED: /request\n"
   # this request should only be accessed through twilio
-  fromNumber = request.form.get('From', None)
-  msg = clean(request.form.get('Body', None).lower())
+  fromNumber = request.form.get('From', '')
+  msg = clean(request.form.get('Body', '').lower())
 
   log('access', 'REQUEST: '+fromNumber+' '+msg)
 
@@ -81,7 +82,7 @@ def requests():
   #user = db.users.find_one({'number': fromNumber})
   req = {'time':currDate, 'message':msg}
     
-  db.users.update({'number':fromNumber}, {'$push':{'requests':req}}, true) # upsert
+  db.users.update({'number':fromNumber}, {'$push':{'requests':req}}, True) # upsert
   log('access', "REACHED: new request "+msg+" from "+fromNumber)
   Commander(fromNumber, msg).start()
 

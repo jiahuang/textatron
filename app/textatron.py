@@ -43,11 +43,6 @@ def json_res(obj):
 ########################################################################
 # Routes
 ########################################################################
-@app.route('/command', methods=["GET"])
-def command():
-  # given a web page url, gets all the commands that other people 
-  # have made off of it
-  return
 
 @app.route('/command/new', methods=["POST"])
 def newCommand():

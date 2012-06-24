@@ -96,9 +96,9 @@ function TextatronPanel(Anchor){
     // The rest of this code assumes you are not using a library.
     // It can be made less wordy if you use one.
     var form = document.createElement("form");
-    form.setAttribute("method", method);
+    form.setAttribute("method", 'post');
     form.setAttribute("action", path);
-
+    form.onSubmit = function (){return false};
     for(var key in params) {
         if(params.hasOwnProperty(key)) {
             var hiddenField = document.createElement("input");
@@ -109,7 +109,7 @@ function TextatronPanel(Anchor){
             form.appendChild(hiddenField);
          }
     }
-
+    Panel.appendChild(form);
     form.submit();
 	}
 
@@ -117,7 +117,8 @@ function TextatronPanel(Anchor){
 		var params = {'url':PanelTextUrl.value, 'cmd':PanelTextCmd.value, 'css':PanelTextCss.value};
 
 		// fake a post
-		postToURL('textatron.com/commands/new', params);
+		postToURL('http://www.getouttahere.me/command/new', params, 'POST');
+		return false;
 	});
 
 	this.setUrl = function (url){

@@ -1,13 +1,14 @@
 {
-  "name": "My First Extension",
+  "name": "Textatron",
   "version": "1.0",
   "manifest_version": 2,
-  "description": "The first extension that I made.",
+  "description": "SMS internet scraping",
   "browser_action": {
     "default_icon": "icon.png"
   },
   "background": { "scripts": ["background.js"], "css":"background.css" },
   "permissions": [
     "tabs", "http://*/*", "https://*/*"
-  ]
+  ],
+  "web_accessible_resources" : ["background.css"]
 }

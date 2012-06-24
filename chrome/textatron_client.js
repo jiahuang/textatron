@@ -22,7 +22,7 @@ function each (e, func) {
 function TextatronPanel(Anchor){
 	// basic dom items
 	var THIS = this;
-	var Panel, PanelSelector, OptionCommand, OptionUrl, OptionCss, PanelTextCmd, PanelTextUrl, PanelTextCss, PanelSave, PanelOutput, ExitButton;
+	var Panel, PanelSelector, OptionCommand, OptionUrl, OptionCss, PanelTextCmd, PanelTextUrl, PanelTextCss, PanelSave, PanelOutput, ExitButton, CSSLink;
 	var Options = [{value:'Command'}, {value:'Url'}, {value:'CSS'}];
 	var oldClickedSelector = [];
 	var isRender = false;
@@ -30,6 +30,10 @@ function TextatronPanel(Anchor){
 	// helper functions
 	Panel = document.createElement('div');
 	Panel.setAttribute('id', 'Panel');
+	//CSSLink = document.createElement("link");
+	//CSSLink.href = chrome.extension.getURL("background.css");
+	//CSSLink.rel = "stylesheet"; 
+	//CSSLink.type = "text/css";
 	
 	PanelSelector = document.createElement('select');
 	PanelSelector.setAttribute("id", "panelSelector");
@@ -83,6 +87,37 @@ function TextatronPanel(Anchor){
 		else if (PanelSelector.selectedIndex == 2){
 			PanelTextCss.classList.remove('hidden');
 		}
+	});
+
+	// http://stackoverflow.com/questions/133925/javascript-post-request-like-a-form-submit
+	function postToURL(path, params, method) {
+    method = method || "post"; // Set method to post by default, if not specified.
+
+    // The rest of this code assumes you are not using a library.
+    // It can be made less wordy if you use one.
+    var form = document.createElement("form");
+    form.setAttribute("method", method);
+    form.setAttribute("action", path);
+
+    for(var key in params) {
+        if(params.hasOwnProperty(key)) {
+            var hiddenField = document.createElement("input");
+            hiddenField.setAttribute("type", "hidden");
+            hiddenField.setAttribute("name", key);
+            hiddenField.setAttribute("value", params[key]);
+
+            form.appendChild(hiddenField);
+         }
+    }
+
+    form.submit();
+	}
+
+	PanelSave.addEventListener('click', function() {
+		var params = {'url':PanelTextUrl.value, 'cmd':PanelTextCmd.value, 'css':PanelTextCss.value};
+
+		// fake a post
+		postToURL('textatron.com/commands/new', params);
 	});
 
 	this.setUrl = function (url){
@@ -180,6 +215,8 @@ function TextatronPanel(Anchor){
 
 	this.render = function(){
 		if (!isRender){
+			Anchor.appendChild(Panel);
+			//Panel.contentDocument.head.appendChild(CSSLink);
 			PanelSelector.appendChild(OptionCommand);
 			PanelSelector.appendChild(OptionUrl);
 			PanelSelector.appendChild(OptionCss);
@@ -189,7 +226,6 @@ function TextatronPanel(Anchor){
 			Panel.appendChild(PanelTextCss);
 			Panel.appendChild(PanelSave);
 			Panel.appendChild(PanelOutput);
-			Anchor.appendChild(Panel);
 			isRender = true;
 		}
 	}

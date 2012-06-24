@@ -116,7 +116,7 @@ class Commander(Thread):
       text = self.findHtmlElements(lh.parse(raw), cmd.selectors)
       
       for t in text:
-        msg = msg + ' '+ str(t.encode('UTF-8', errors='replace'))
+        msg = msg + ' '+ t.encode('UTF-8', 'replace')
       #  count = count + 1
       return {'success':msg}
     except urllib2.HTTPError, e:
@@ -176,4 +176,4 @@ class Commander(Thread):
       if i < len(msg):
         time.sleep(1.5)
         
-    log('text', self.num+':'+str(unicode(msg, errors='ignore')))
+    log('text', self.num+':'+msg.encode('UTF-8', 'replace')

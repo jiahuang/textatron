@@ -47,20 +47,20 @@ def json_res(obj):
 @app.route('/command/new', methods=["POST"])
 def newCommand():
   #cmd = json.loads(request.form.get('cmd', ''))
-  url = request.form.get('url', '');
+  url = request.form.get('url', '')
   urlparts = urlparse(url)
   if not urlparts.scheme:
     url = 'http://'+url
   newCmd = db.Commands()
-  newCmd.cmd = request.form.get('cmd', '').lower()
-  newCmd.url = url
+  newCmd.cmd = unicode(request.form.get('cmd', '').lower())
+  newCmd.url = unicode(url)
   # parsing for switches
   #switches = re.findall(r"(?<={)[^{|}]+(?=})", newCmd['url'])
   parsedSwitches = [{'switch':switch.split('=')[0], 'default':switch.split('=')[1] if len(switch.split('=')) > 1 else ''} for switch in re.findall(r"(?<={)[^{|}]+(?=})", url)]
   # parsing css selectors
   # parsedCSS = [clean(selector) for selector in cmd['css'].split(',') if selector != '']
   newCmd.switches = parsedSwitches
-  newCmd.selectors = request.form.get('css', '')
+  newCmd.selectors = unicode(request.form.get('css', ''))
   newCmd.save()
   return json_res({'success': 'Sweet, your command has been added. Try texting '+newCmd.cmd+' to '+TEXTATRON_NUM})
 

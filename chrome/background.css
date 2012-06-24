@@ -10,9 +10,7 @@
 
 #Panel {
   background-color: white;
-  max-width:600px;
-  min-width:300px;
-  width:40%;
+  width:530px !important;
   height:30px;
   float:left;
   position:fixed;
@@ -28,7 +26,7 @@
 }
 
 .panelText {
-	width:70% !important;
+	width:350px !important;
   font-size: 11px !important;
   padding: 3px !important;
 }
@@ -60,4 +58,12 @@
 
 #panelSave:hover {
   background: -webkit-gradient(linear, left top, left bottom, from(#DCB367), to(#DCA53C)); 
+}
+
+#panelOutput {
+  color: #F0F0F0;
+  font-size: 11px !important;
+  font-weight: bold !important;
+  margin-top: 10px !important;
+  margin-left: 10px !important;
 }

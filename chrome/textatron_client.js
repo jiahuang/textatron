@@ -9,12 +9,6 @@ function hasClass(element, cls) {
     var r = new RegExp('\\b' + cls + '\\b');
     return r.test(element.className);
 }
-/*
-function each (e, func) {
-	for (var i = 0, l=e.length; i<l; i++) {
-		func(e[i]);
-	}
-}*/
 
 /******************************************************
 * selector form
@@ -22,57 +16,39 @@ function each (e, func) {
 function TextatronPanel(Anchor){
 	// basic dom items
 	var THIS = this;
-	var Panel, PanelSelector, OptionCommand, OptionUrl, OptionCss, PanelTextCmd, PanelTextUrl, PanelTextCss, PanelSave, PanelOutput, ExitButton, CSSLink;
+	var Panel, PanelForm, PanelIFrame, PanelSelector, OptionCommand, OptionUrl, OptionCss, PanelTextCmd, PanelTextUrl, PanelTextCss, PanelSave, PanelOutput, ExitButton, CSSLink;
 	var Options = [{value:'Command'}, {value:'Url'}, {value:'CSS'}];
 	var oldClickedSelector = [];
 	var isRender = false;
 	
 	// helper functions
-	Panel = document.createElement('div');
-	Panel.setAttribute('id', 'Panel');
-	//CSSLink = document.createElement("link");
-	//CSSLink.href = chrome.extension.getURL("background.css");
-	//CSSLink.rel = "stylesheet"; 
-	//CSSLink.type = "text/css";
-	
-	PanelSelector = document.createElement('select');
-	PanelSelector.setAttribute("id", "panelSelector");
-	
-	OptionCommand = document.createElement("option");
-	OptionCommand.setAttribute("value", Options[0].value);
+  function createItem(elementType, attrs) {
+  	var temp = document.createElement(elementType);
+  	for(var key in attrs) {
+        if(attrs.hasOwnProperty(key))
+            temp.setAttribute(key, attrs[key]);
+    }
+    return temp;
+  }
+
+	Panel = createItem('div', {id: 'Panel'});
+	PanelIframe = createItem('iframe', {class:'hidden', name:'panelIFrame', id:'panelIFrame'});
+	PanelSelector = createItem('select', {id:'panelSelector'});
+
+	OptionCommand = createItem("option", {value:Options[0].value});
 	OptionCommand.innerHTML = Options[0].value;
-
-	OptionUrl = document.createElement("option");
-	OptionUrl.setAttribute("value", Options[1].value);
+	OptionUrl = createItem("option", {value:Options[1].value});
 	OptionUrl.innerHTML = Options[1].value;
-
-	OptionCss = document.createElement("option");
-	OptionCss.setAttribute("value", Options[2].value);
+	OptionCss = createItem("option", {value:Options[2].value});
 	OptionCss.innerHTML = Options[2].value;
 
-	PanelTextCmd = document.createElement('input');
-	PanelTextCmd.setAttribute('type', 'text');
-	PanelTextCmd.setAttribute('id', 'panelTextCmd');
-	PanelTextCmd.classList.add('panelText');
-
-	PanelTextUrl = document.createElement('input');
-	PanelTextUrl.setAttribute('type', 'text');
-	PanelTextUrl.setAttribute('id', 'panelTextUrl');
-	PanelTextUrl.className = 'panelText hidden';
-
-	PanelTextCss = document.createElement('input');
-	PanelTextCss.setAttribute('type', 'text');
-	PanelTextCss.setAttribute('id', 'panelTextCss');
-	PanelTextCss.className = 'panelText hidden';
-
-	PanelSave = document.createElement('input');
-	PanelSave.setAttribute('type', 'button');
-	PanelSave.setAttribute('id', 'panelSave');
-	PanelSave.setAttribute('value', 'save');
-
-	PanelOutput = document.createElement('div');
-	PanelOutput.setAttribute('id', 'panelOutput');
-
+	PanelTextCmd = createItem('input', {type:'text', id:'panelTextCmd', name:'cmd', class:'panelText'});
+	PanelTextUrl = createItem('input', {type:'text', id:'panelTextUrl', name:'url', class:'panelText hidden'});
+	PanelTextCss = createItem('input', {type:'text', id:'panelTextCss', name:'css', class:'panelText hidden'});
+	PanelSave = createItem('input', {type:'button', id:'panelSave', value:'save'});
+	PanelOutput = createItem('div', {id:'panelOutput', class:'hidden'});
+	PanelForm = createItem("div"); 
+	
 	PanelSelector.addEventListener('change', function () {
 		PanelTextCmd.classList.add('hidden');
 		PanelTextUrl.classList.add('hidden');
@@ -89,35 +65,33 @@ function TextatronPanel(Anchor){
 		}
 	});
 
-	// http://stackoverflow.com/questions/133925/javascript-post-request-like-a-form-submit
-	function postToURL(path, params, method) {
-    method = method || "post"; // Set method to post by default, if not specified.
-
-    // The rest of this code assumes you are not using a library.
-    // It can be made less wordy if you use one.
-    var form = document.createElement("form");
-    form.setAttribute("method", 'post');
-    form.setAttribute("action", path);
-    form.onSubmit = function (){return false};
-    for(var key in params) {
-        if(params.hasOwnProperty(key)) {
-            var hiddenField = document.createElement("input");
-            hiddenField.setAttribute("type", "hidden");
-            hiddenField.setAttribute("name", key);
-            hiddenField.setAttribute("value", params[key]);
-
-            form.appendChild(hiddenField);
-         }
-    }
-    Panel.appendChild(form);
-    form.submit();
-	}
-
 	PanelSave.addEventListener('click', function() {
-		var params = {'url':PanelTextUrl.value, 'cmd':PanelTextCmd.value, 'css':PanelTextCss.value};
+		var req = new XMLHttpRequest();
+		//if (!req) return;
+		var method = "POST";
+		var postData = "cmd="+encodeURIComponent(PanelTextCmd.value)+"&url="+encodeURIComponent(PanelTextUrl.value)+"&css="+encodeURIComponent(PanelTextCss.value);
+		console.log(postData);
+		req.open(method, 'http://getouttahere.me/command/new',true);
+		//req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 
-		// fake a post
-		postToURL('http://www.getouttahere.me/command/new', params, 'POST');
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+				//			alert('HTTP error ' + req.status);
+				return;
+			}
+			//callback(req);
+			var res = JSON.parse(req.responseText);
+			var resMsg = res['success'] ? res['success'] : res['error'];
+			console.log(resMsg);
+			PanelForm.classList.add('hidden');
+			PanelOutput.innerHTML = resMsg;
+			PanelOutput.classList.remove('hidden');
+		}
+		if (req.readyState == 4) return;
+		req.send(postData);
 		return false;
 	});
 
@@ -221,11 +195,12 @@ function TextatronPanel(Anchor){
 			PanelSelector.appendChild(OptionCommand);
 			PanelSelector.appendChild(OptionUrl);
 			PanelSelector.appendChild(OptionCss);
-			Panel.appendChild(PanelSelector);
-			Panel.appendChild(PanelTextCmd);
-			Panel.appendChild(PanelTextUrl);
-			Panel.appendChild(PanelTextCss);
-			Panel.appendChild(PanelSave);
+			PanelForm.appendChild(PanelSelector);
+			PanelForm.appendChild(PanelTextCmd);
+			PanelForm.appendChild(PanelTextUrl);
+			PanelForm.appendChild(PanelTextCss);
+			PanelForm.appendChild(PanelSave);
+			Panel.appendChild(PanelForm);
 			Panel.appendChild(PanelOutput);
 			isRender = true;
 		}
@@ -236,7 +211,7 @@ function TextatronPanel(Anchor){
 	}
 
 	this.isInPanel = function (e){
-		var ObjList = [Panel, PanelSelector, PanelTextCmd, PanelTextUrl, PanelTextCss, PanelSave, PanelOutput, ExitButton];
+		var ObjList = [Panel, PanelForm, PanelSelector, PanelTextCmd, PanelTextUrl, PanelTextCss, PanelSave, PanelOutput, ExitButton];
 		if (ObjList.indexOf(e) > -1)
 			return true;
 		return false;
@@ -265,6 +240,8 @@ function TextatronPanel(Anchor){
 var PREV_DOMS;
 var CLICKED_DOMS;
 var PANEL;
+
+//window.addEventListener('message', PANEL.handleResponse, false);
 
 if (PANEL && PANEL.isHidden()) {
 	chrome.extension.sendRequest({type:"extension", message: "show"});

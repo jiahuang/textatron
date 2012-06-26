@@ -32,7 +32,7 @@ class CommanderTest:
       res = self.c.performCustomCommand(badCmd)
       self.printResults(badCmd, res, False, True)
 
-    cmds = ['woot', 'reddit', 'hn', 'gh p.hireAnOliner u.jiahuang', 'gh u.jiahuang p.hireAnOliner', 'gh']
+    cmds = ['woot', 'reddit', 'hn', 'gh p.hireAnOliner u.jiahuang', 'gh u.jiahuang p.hireAnOliner', 'gh', 'amzn p.gloves']
     for cmd in cmds:
       res = self.c.performCustomCommand(cmd)
       #print res

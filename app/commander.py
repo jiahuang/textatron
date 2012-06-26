@@ -6,6 +6,7 @@ import urllib2
 import re
 from logger import log
 from lxml import html as lh
+from lxml import etree
 from lxml.cssselect import CSSSelector 
 import time
 from threading import Thread
@@ -93,7 +94,6 @@ class Commander(Thread):
         	switches.append({'s':switchLocs[-1]['s'],'data':data})
 
       url = cmd.url
-      #print switches
       #put together url with switches
       for s in switches:
         #print '{'+s['s']+'}', s['data']
@@ -107,17 +107,15 @@ class Commander(Thread):
     else:
       url = cmd.url
     try:
-      #print url
+      print url
       request = urllib2.Request(url)
       request.add_header("User-Agent", 'Texatron/0.1')
       raw = urllib2.urlopen(request)
       msg = ''
-      count = 1
       text = self.findHtmlElements(lh.parse(raw), cmd.selectors)
       
       for t in text:
         msg = msg + ' '+ t.encode('UTF-8', 'replace')
-      #  count = count + 1
       return {'success':msg}
     except urllib2.HTTPError, e:
       return {"error": "HTTP error: %d" % e.code}
@@ -128,7 +126,6 @@ class Commander(Thread):
     sel = CSSSelector(css)
     
     foundText = [e.text_content() for e in sel(eTree)]
-    #foundText.join('')
     return foundText
 
   def processMsg(self, msg, isNewMsg=True, cache=True):
@@ -175,5 +172,4 @@ class Commander(Thread):
       #sleep 1.5 seconds
       if i < len(msg):
         time.sleep(1.5)
-        
-    log('text', self.num+':'+msg.encode('UTF-8', 'replace')
+    #log('text', self.num+':'+msg.encode('UTF-8', error='replace')

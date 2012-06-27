@@ -73,7 +73,7 @@ class Commander(Thread):
           elif  s['default'] != '':
             switches.append({'s':s['switch']+'='+s['default'], 'data':s['default']})
           else:
-            return {'error':'Error:missing '+s['switch']+' switch. ex:'+cmd.example}
+            return {'error':'Error:missing '+s['switch']}
         
       #sort by locs
       switchLocs = sorted(switchLocs, key=itemgetter('loc'))
@@ -157,7 +157,7 @@ class Commander(Thread):
     i = 0
     while i*160 < len(msg) and i<MAX_TEXTS:
       print "sending msg"
-      if i+1 >= MAX_TEXTS and len(msg) > (i+1)*160:
+      if i+1 >= MAX_TEXTS and len(msg) > (i+1)*150:
         CLIENT.sms.messages.create(to=self.num, from_=TWILIO_NUM, body = msg[i*160:(i+1)*160-len(self.moreText)]+self.moreText)
         #print self.msg[i*160:(i+1)*160-len(self.moreText)]+self.moreText
       elif (i+1)*160 <= len(msg):

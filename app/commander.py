@@ -14,6 +14,7 @@ from operator import itemgetter
 
 CLIENT = TwilioRestClient(TWILIO_SID, TWILIO_AUTH)
 MAX_TEXTS = 4 # max number before delaying into more
+CHAR_COUNT = 140
 
 def clean(s):
   s = re.sub("\s+", " ", s)
@@ -133,7 +134,7 @@ class Commander(Thread):
     if cache:
       cacheNumber = db.cache.find_one({'number':self.num})
       currDate = datetime.datetime.utcnow()
-      index = 160*MAX_TEXTS-len(self.moreText)
+      index = CHAR_COUNT*MAX_TEXTS-len(self.moreText)
       if cacheNumber and isNewMsg:
         # update cache
         db.cache.update({'number':self.num}, {'$set':{'data':msg, 'index':index, 'time':currDate}})
@@ -145,7 +146,7 @@ class Commander(Thread):
           return # break out
         msg = msg[index:]
         # move cache index to new place, send off message
-        db.cache.update({'number':self.num}, {'$set':{'index':max(len(msg), index+160*MAX_TEXTS)}})
+        db.cache.update({'number':self.num}, {'$set':{'index':max(len(msg), index+CHAR_COUNT*MAX_TEXTS)}})
       else: 
       	# new cache for that number
         cache = db.Cache()      
@@ -155,16 +156,16 @@ class Commander(Thread):
         cache.time = currDate
         cache.save()
     i = 0
-    while i*160 < len(msg) and i<MAX_TEXTS:
+    while i*CHAR_COUNT < len(msg) and i<MAX_TEXTS:
       print "sending msg"
-      if i+1 >= MAX_TEXTS and len(msg) > (i+1)*150:
-        CLIENT.sms.messages.create(to=self.num, from_=TWILIO_NUM, body = msg[i*160:(i+1)*160-len(self.moreText)]+self.moreText)
+      if i+1 >= MAX_TEXTS and len(msg) > (i+1)*CHAR_COUNT:
+        CLIENT.sms.messages.create(to=self.num, from_=TWILIO_NUM, body = msg[i*CHAR_COUNT:(i+1)*CHAR_COUNT-len(self.moreText)]+self.moreText)
         #print self.msg[i*160:(i+1)*160-len(self.moreText)]+self.moreText
-      elif (i+1)*160 <= len(msg):
-        CLIENT.sms.messages.create(to=self.num, from_=TWILIO_NUM, body = msg[i*160:(i+1)*160])
+      elif (i+1)*CHAR_COUNT <= len(msg):
+        CLIENT.sms.messages.create(to=self.num, from_=TWILIO_NUM, body = msg[i*CHAR_COUNT:(i+1)*CHAR_COUNT])
         #print self.msg[i*160:(i+1)*160]
       else:
-        CLIENT.sms.messages.create(to=self.num, from_=TWILIO_NUM, body = msg[i*160:])
+        CLIENT.sms.messages.create(to=self.num, from_=TWILIO_NUM, body = msg[i*CHAR_COUNT:])
         #print self.msg[i*160:]
 
       self.user.save()
